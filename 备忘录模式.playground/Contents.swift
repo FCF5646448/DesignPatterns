@@ -91,4 +91,100 @@ class Test {
 Test().test()
 
 
+// 配置信息类
+struct ConfigFile {
+    var versionNo: String
+    var content: String
+    var dateTime: Date
+    var operat: String
+}
 
+// 备忘录类
+class ConfigMemento {
+    private var _cofigFile: ConfigFile
+    var cofigFile: ConfigFile {
+        get {
+            return _cofigFile
+        }
+        set {
+            _cofigFile = newValue
+        }
+    }
+    
+    init(_ cofigFile: ConfigFile) {
+        self._cofigFile = cofigFile
+    }
+    
+    func jsonString() -> String {
+        return "{versionNo:\(_cofigFile.versionNo); content: \(_cofigFile.content), dateTime:\(_cofigFile.dateTime), operat:\(_cofigFile.operat)}"
+    }
+}
+
+class Admin {
+    var cursorIdx = 0
+    private var list = [ConfigMemento]()
+    private var map = [String: ConfigMemento]()
+    
+    // 新增版本
+    func append(_ memento: ConfigMemento) {
+        list.append(memento)
+        map[memento.cofigFile.versionNo] = memento
+        cursorIdx += 1
+    }
+    
+    // 回滚版本
+    func undo() -> ConfigMemento? {
+        cursorIdx -= 1
+        if cursorIdx <= 0 {
+            return list.first
+        }
+        return list[cursorIdx]
+    }
+ 
+    // 前进历史配置
+    func redo() -> ConfigMemento? {
+        cursorIdx += 1
+        if cursorIdx >= list.count {
+            return list.last
+        }
+        
+        return list[cursorIdx]
+    }
+    
+    func get(_ versionNo: String) -> ConfigMemento? {
+        return map[versionNo]
+    }
+}
+
+class NewTest {
+    func test() {
+        let admin = Admin()
+        
+        admin.append(ConfigMemento(ConfigFile(versionNo: "10001", content: "配置内容1", dateTime: Date(), operat: "ethan")))
+        
+        admin.append(ConfigMemento(ConfigFile(versionNo: "10002", content: "配置内容2", dateTime: Date(), operat: "ethan")))
+        
+        admin.append(ConfigMemento(ConfigFile(versionNo: "10003", content: "配置内容3", dateTime: Date(), operat: "ethan")))
+        
+        admin.append(ConfigMemento(ConfigFile(versionNo: "10004", content: "配置内容4", dateTime: Date(), operat: "ethan")))
+        
+        
+        let json = admin.undo()?.jsonString()
+        print("回滚：\(json ?? "")")
+        
+        let json2 = admin.undo()?.jsonString()
+        print("回滚：\(json2 ?? "")")
+        
+        
+        let json3 = admin.redo()?.jsonString()
+        print("前进：\(json3 ?? "")")
+        
+        let json4 = admin.redo()?.jsonString()
+        print("前进：\(json4 ?? "")")
+        
+        let json5 = admin.get("10002")?.jsonString()
+        print("获取：\(json5 ?? "")")
+    }
+}
+
+NewTest().test()
